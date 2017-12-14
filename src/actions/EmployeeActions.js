@@ -1,7 +1,9 @@
 import {
   EMPLOYEE_UPDATE,
   EMPLOYEE_CREATE,
-  EMPLOYEES_FETCH_SUCCESS
+  EMPLOYEES_FETCH_SUCCESS,
+  EMPLOYEE_SAVE_SUCCESS,
+  EMPLOYEE_CLEAR_SUCCESS
 } from './types';
 import { Actions } from 'react-native-router-flux';
 import firebase from 'firebase';
@@ -19,7 +21,7 @@ export const employeeCreate = ({ name, phone, shift }) => {
   return dispatch => {
     firebase
       .database()
-      .ref(`/users/${currentUser.uid}/employess`)
+      .ref(`/users/${currentUser.uid}/employees`)
       .push({ name, phone, shift })
       .then(() => {
         dispatch({ type: EMPLOYEE_CREATE });
@@ -33,9 +35,41 @@ export const employeesFetch = () => {
   return dispatch => {
     firebase
       .database()
-      .ref(`/users/${currentUser.uid}/employess`)
+      .ref(`/users/${currentUser.uid}/employees`)
       .on('value', snapshot => {
         dispatch({ type: EMPLOYEES_FETCH_SUCCESS, payload: snapshot.val() });
       });
   };
+};
+
+export const employeeSave = ({ name, phone, shift, uid }) => {
+  const { currentUser } = firebase.auth();
+  return dispatch => {
+    firebase
+      .database()
+      .ref(`/users/${currentUser.uid}/employees/${uid}`)
+      .set({ name, phone, shift })
+      .then(() => {
+        dispatch({ type: EMPLOYEE_SAVE_SUCCESS });
+        Actions.main({ type: 'reset' });
+      });
+  };
+};
+
+export const employeeDelete = ({ uid }) => {
+  const { currentUser } = firebase.auth();
+
+  return () => {
+    firebase
+      .database()
+      .ref(`/users/${currentUser.uid}/employees/${uid}`)
+      .remove()
+      .then(() => {
+        Actions.main({ type: 'reset' });
+      });
+  };
+};
+
+export const employeeClear = () => {
+  return { type: EMPLOYEE_CLEAR_SUCCESS };
 };
